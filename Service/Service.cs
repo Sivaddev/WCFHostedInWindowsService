@@ -23,6 +23,8 @@ namespace Microsoft.ServiceModel.Samples
         double Multiply(double n1, double n2);
         [OperationContract]
         double Divide(double n1, double n2);
+        [OperationContract]
+        TimeSpan Uptime();
     }
 
     public class CalculatorService : ICalculator
@@ -51,11 +53,17 @@ namespace Microsoft.ServiceModel.Samples
             double result = n1 / n2;
             return result;
         }
+
+        public TimeSpan Uptime()
+        {
+            return DateTime.Now - CalculatorWindowsService.Junk.StartTime;
+        }
     }
 
 
     public class CalculatorWindowsService : ServiceBase
     {
+        public static SharedJunk Junk = new SharedJunk();
         public ServiceHost serviceHost = null;
         public CalculatorWindowsService()
         {
@@ -68,9 +76,11 @@ namespace Microsoft.ServiceModel.Samples
             ServiceBase.Run(new CalculatorWindowsService());
         }
 
+
         // Start the Windows service.
         protected override void OnStart(string[] args)
         {
+            Junk.StartTime = DateTime.Now;
             if (serviceHost != null)
             {
                 serviceHost.Close();
@@ -93,6 +103,11 @@ namespace Microsoft.ServiceModel.Samples
                 serviceHost = null;
             }
         }
+    }
+
+    public class SharedJunk
+    {
+        public DateTime StartTime { set; get; }
     }
 
     // Provide the ProjectInstaller class which allows 
